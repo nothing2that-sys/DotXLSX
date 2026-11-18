@@ -385,6 +385,15 @@ class DotXLSXApp:
 
         is_gif_color = mode == "color_cell" and self.media is not None and self.media.is_animated
         self.palette_spin.configure(state=tk.NORMAL if is_gif_color else tk.DISABLED)
+        is_anim_export = (
+            self.media is not None
+            and self.media.is_animated
+            and mode != "color_braille"
+        )
+        if is_anim_export:
+            self.export_btn.configure(text="자동 재생 엑셀 내보내기 (.xlsm)")
+        else:
+            self.export_btn.configure(text="엑셀 파일 내보내기 (.xlsx)")
         self._update_res_summary()
 
     def _on_mode_changed(self, _event=None) -> None:
