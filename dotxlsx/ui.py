@@ -7,7 +7,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
 
-from PIL import Image, ImageTk
+from PIL import Image, ImageGrab, ImageTk
 
 from dotxlsx.converter import (
     ConversionConfig,
@@ -113,8 +113,13 @@ class DotXLSXApp:
         f_box = ttk.LabelFrame(left_frame, text="1. 이미지 / GIF 불러오기", padding=8)
         f_box.pack(fill=tk.X, pady=(0, 6))
 
-        ttk.Button(f_box, text="파일 열기 (PNG / JPG / GIF)...", command=self._on_open_file).pack(
-            fill=tk.X
+        btn_row = ttk.Frame(f_box)
+        btn_row.pack(fill=tk.X)
+        ttk.Button(btn_row, text="파일 열기 (PNG/JPG/GIF)...", command=self._on_open_file).pack(
+            side=tk.LEFT, fill=tk.X, expand=True
+        )
+        ttk.Button(btn_row, text="붙여넣기 (Ctrl+V)", command=self._on_paste_clipboard).pack(
+            side=tk.RIGHT, padx=(6, 0)
         )
         ttk.Label(f_box, textvariable=self.file_info_var, foreground="#475569", wraplength=310).pack(
             anchor=tk.W, pady=(5, 0)
@@ -354,6 +359,8 @@ class DotXLSXApp:
         self.max_frames_var.trace_add("write", lambda *_: self._schedule_convert())
         self.palette_colors_var.trace_add("write", lambda *_: self._schedule_convert())
         self.preview_canvas.bind("<Configure>", lambda _e: self._render_current_frame())
+        self.root.bind("<Control-v>", lambda _e: self._on_paste_clipboard())
+        self.root.bind("<Control-V>", lambda _e: self._on_paste_clipboard())
 
     def _get_render_mode(self) -> RenderMode:
         return RENDER_MODE_LABELS.get(self.render_mode_label_var.get(), "color_cell")
@@ -423,6 +430,46 @@ class DotXLSXApp:
         if self.aspect_lock_var.get():
             self._apply_aspect_rows()
 
+        self.current_frame_idx = 0
+        self._run_convert()
+        if self.media.is_animated:
+            self._start_playback()
+
+    def _on_paste_clipboard(self) -> None:
+        clip = ImageGrab.grabclipboard()
+        if isinstance(clip, list) and clip:
+            first = Path(clip[0])
+            if first.is_file():
+                try:
+                    self._stop_playback()
+                    self.media = load_media(first)
+                except Exception as exc:
+                    messagebox.showerror("붙여넣기 실패", f"이미지를 불러오지 못했습니다:\n{exc}")
+                    return
+            else:
+                messagebox.showinfo("클립보드", "클립보드에 이미지가 없습니다.")
+                return
+        elif isinstance(clip, Image.Image):
+            self._stop_playback()
+            rgba = clip.convert("RGBA")
+            self.media = LoadedMedia(
+                path=Path("clipboard.png"),
+                frames=[rgba],
+                durations_ms=[100],
+                original_size=rgba.size,
+            )
+        else:
+            messagebox.showinfo("클립보드", "클립보드에 이미지가 없습니다. (스크린샷 후 Ctrl+V)")
+            return
+
+        w, h = self.media.original_size
+        n_frames = len(self.media.frames)
+        kind = f"GIF ({n_frames} 프레임)" if self.media.is_animated else "클립보드 이미지"
+        self.file_info_var.set(f"{self.media.path.name}  |  {w}×{h} px  |  {kind}")
+        self._set_gif_controls_state(self.media.is_animated)
+        self.export_btn.configure(state=tk.NORMAL)
+        if self.aspect_lock_var.get():
+            self._apply_aspect_rows()
         self.current_frame_idx = 0
         self._run_convert()
         if self.media.is_animated:

@@ -185,6 +185,11 @@ def export_to_xlsx(
     ws_canvas = wb.active
     ws_canvas.title = "Canvas"
     ws_canvas.views.sheetView[0].showGridLines = False
+    # Auto-fit zoom so the full artwork is visible on open without manual zooming.
+    est_px_w = cols * (18 if result.render_mode == "color_cell" else 14)
+    est_px_h = rows * (19 if result.render_mode == "color_cell" else 21)
+    zoom = min(100, max(25, int(min(1100 / max(1, est_px_w), 650 / max(1, est_px_h)) * 100)))
+    ws_canvas.views.sheetView[0].zoomScale = zoom
     avg_delay = int(sum(result.durations_ms) / max(1, len(result.durations_ms)))
 
     if result.render_mode == "color_cell":
