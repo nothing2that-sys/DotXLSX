@@ -2,7 +2,18 @@
 
 이미지 및 GIF 파일을 엑셀 픽셀아트(`.xlsx` / `.xlsm`)로 변환하는 Windows 데스크톱 애플리케이션입니다.
 
-## 변환 예제 (Example)
+## 변환 예제 (Examples)
+
+### 1. GIF 자동 재생 애니메이션 (`.xlsm`) — 히스 레저 조커 박수
+
+엑셀에서 파일을 열고 상단의 `[콘텐츠 사용]`을 누르면 매크로 타이머가 자동으로 프레임을 순환 재생합니다.
+
+| 원본 GIF | 컬러 셀 32색 (`80×50` 셀, 15프레임) | 점자 도트 (`80×25` 셀 / `160×100` 도트) |
+| :---: | :---: | :---: |
+| ![Joker Original](examples/joker_clap.gif) | ![Joker Color Preview](examples/joker_clap_color_preview.gif) | ![Joker Braille Preview](examples/joker_clap_braille_preview.gif) |
+| — | [joker_clap_color.xlsm](examples/joker_clap_color.xlsm) | [joker_clap_braille.xlsm](examples/joker_clap_braille.xlsm) |
+
+### 2. 정적 이미지 (`.xlsx`, 매크로 없음)
 
 | 원본 이미지 | 컬러 셀 (`80×60` 셀) | 점자 도트 (`80×30` 셀 / `160×120` 도트) |
 | :---: | :---: | :---: |
